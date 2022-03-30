@@ -6,8 +6,11 @@ trigger:
   branches:
     include:
     - master
+  paths:
+    include:
+    - /*
     exclude:
-    - 01-docker-build-and-push-to-acr-pipeline.yml
+    - /01-docker-build-and-push-to-acr-pipeline.yml
 
 resources:
 - repo: self
