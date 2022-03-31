@@ -50,7 +50,7 @@ stages:
           $(tag)
     - task: PublishBuildArtifacts@1
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/manifests'
+        PathtoPublish: './manifests'
         ArtifactName: 'manifests'
         publishLocation: 'Container'
 
