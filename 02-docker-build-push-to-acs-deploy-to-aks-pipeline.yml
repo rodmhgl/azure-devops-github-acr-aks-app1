@@ -3,7 +3,15 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
-- master
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - /*
+    exclude:
+    - /01-docker-build-and-push-to-acr-pipeline.yml
+    - /02-docker-build-push-to-acs-deploy-to-aks-pipeline.yml
 
 resources:
 - repo: self
