@@ -10,8 +10,7 @@ trigger:
     include:
     - /*
     exclude:
-    - /01-docker-build-and-push-to-acr-pipeline.yml
-    - /02-docker-build-push-to-acr-deploy-to-aks-pipeline.yml
+    - /pipelines
 
 resources:
 - repo: self
