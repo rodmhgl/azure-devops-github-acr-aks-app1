@@ -39,12 +39,21 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)/kube-manifests'
           ArtifactName: 'kube-manifests'
           publishLocation: 'Container'
+    - job: Scan
+      displayName: Scan Container
+      dependsOn: Build
+      condition: succeeded()
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+      - task: Docker@2
+        inputs:
+          containerRegistry: 'manual-rnaksdevopsacr-svc'
+          command: 'login'
       - task: CmdLine@2
         displayName: "Scan container image using Containerized Trivy"
         inputs:
           script: |
-            ls ~/.docker
-            cat ~/.docker/config.json
             mkdir report -p
             sudo docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
             # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
