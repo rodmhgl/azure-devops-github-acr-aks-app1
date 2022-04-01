@@ -27,11 +27,8 @@ stages:
             $(Build.SourceVersion)
       
       - task: Bash@3
-        displayName: "Image scan by Trivy"
-        env:
-          REPO_URI: $(rn_repo_name)
+        displayName: "Install Trivy"
         inputs:
-          failOnStderr: true
           targetType: 'inline'
           script: |
             sudo apt-get install wget apt-transport-https gnupg lsb-release
@@ -39,12 +36,14 @@ stages:
             echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
             sudo apt-get -y update
             sudo apt-get -y install trivy
-            mkdir report
-            echo $REPO_URI
-            echo $(image_name)
-            echo $(image_tag)
-            echo "$REPO_URI/$(image_name)"
-            echo "trivy image -s HIGH,CRITICAL --exit-code 1 $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt"
+
+      - task: Bash@3
+        displayName: "Scan container image with Trivy"
+        inputs:
+          failOnStderr: true
+          targetType: 'inline'
+          script: |
+            mkdir report -p
             trivy image -s HIGH,CRITICAL --exit-code 1 $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
 
       # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
