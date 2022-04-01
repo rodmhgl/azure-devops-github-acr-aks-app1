@@ -43,8 +43,8 @@ stages:
             echo $(image_name)
             echo $(image_tag)
             echo "$REPO_URI/$(image_name)"
-            echo "trivy image -s HIGH,CRITICAL --exit-code $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt"
-            trivy image -s HIGH,CRITICAL --exit-code $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
+            echo "trivy image -s HIGH,CRITICAL --exit-code 1 $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt"
+            trivy image -s HIGH,CRITICAL --exit-code 1 $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
 
       # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
       # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
