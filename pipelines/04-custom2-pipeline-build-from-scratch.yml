@@ -37,14 +37,21 @@ stages:
             sudo apt-get -y update
             sudo apt-get -y install trivy
 
+      - task: CmdLine@2
+        inputs:
+          script: |
+            mkdir report -p
+            trivy --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+
       - task: Bash@3
         displayName: "Scan container image with Trivy"
         inputs:
-          failOnStderr: true
           targetType: 'inline'
           script: |
-            mkdir report -p
-            trivy image -s HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
+           mkdir report -p
+            trivy --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
       # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
       # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
