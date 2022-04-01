@@ -3,6 +3,7 @@ trigger:
 
 variables:
   image_name: custom2aksnginxapp1
+  repository: rnaksdevopsacr.azurecr.io
   image_tag: $(Build.BuildId)
 
 stages:
@@ -30,8 +31,7 @@ stages:
           sudo apt-get -y update
           sudo apt-get -y install trivy
           mkdir report
-          trivy image -s HIGH,CRITICAL $(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
-          trivy image -s HIGH,CRITICAL rnaksdevopsacr.azurecr.io/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
+          trivy image -s HIGH,CRITICAL $(repository)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt
         displayName: "Image scan by Trivy"
         continueOnError: true
 
