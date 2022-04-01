@@ -42,8 +42,8 @@ stages:
         inputs:
           script: |
             mkdir report -p
-            trivy i --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
-            trivy i --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+            trivy i --exit-code 0 --ignore-unfixed -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy i --exit-code 0 --ignore-unfixed -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
       - task: Bash@3
         displayName: "Scan container image with Trivy - BASH"
@@ -51,8 +51,8 @@ stages:
           targetType: 'inline'
           script: |
             mkdir report -p
-            trivy i --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
-            trivy i --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+            trivy i --exit-code 0 --ignore-unfixed -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy i --exit-code 0 --ignore-unfixed -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
       - task: CmdLine@2
         displayName: "Scan container image using Containerized Trivy"
