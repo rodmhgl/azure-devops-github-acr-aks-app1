@@ -38,6 +38,7 @@ stages:
             sudo apt-get -y install trivy
 
       - task: CmdLine@2
+        displayName: "Scan container image with Trivy - CmdLine"
         inputs:
           script: |
             mkdir report -p
@@ -45,7 +46,7 @@ stages:
             trivy --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
       - task: Bash@3
-        displayName: "Scan container image with Trivy"
+        displayName: "Scan container image with Trivy - BASH"
         inputs:
           targetType: 'inline'
           script: |
@@ -54,6 +55,7 @@ stages:
             trivy --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
       - task: CmdLine@2
+        displayName: "Scan container image using Containerized Trivy"
         inputs:
           script: |
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag)
@@ -65,6 +67,7 @@ stages:
       # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
 
       - task: CopyFiles@1
+        displayName: Copy Files to Artifact Staging Directory
         inputs:
           SourceFolder: '$(System.DefaultWorkingDirectory)'
           Contents: '**'
@@ -72,18 +75,21 @@ stages:
           OverWrite: true
 
       - task: PublishBuildArtifacts@1
+        displayName: Publish Kube Manifests
         inputs:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
           ArtifactName: 'kube-manifests'
           publishLocation: 'Container'
 
       - task: PublishBuildArtifacts@1
+        displayName: Publish Medium and High Scan from Trivy
         inputs:
           PathtoPublish: '$(System.DefaultWorkingDirectory)/report/trivy-image-scan-_Medium_High_report.txt'
           ArtifactName: 'trivy-scan-medium-high'
           publishLocation: 'Container'
 
       - task: PublishBuildArtifacts@1
+        displayName: Publish Critical Scan from Trivy
         inputs:
           PathtoPublish: '$(System.DefaultWorkingDirectory)/report/trivy-image-scan-report_CRITICAL.txt'
           ArtifactName: 'trivy-scan-critical'
