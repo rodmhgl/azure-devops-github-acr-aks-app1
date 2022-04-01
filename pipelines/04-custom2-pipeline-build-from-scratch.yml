@@ -27,20 +27,23 @@ stages:
             $(Build.SourceVersion)
       
       - script: |
-          sudo apt-get install wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get -y update
-          sudo apt-get -y install trivy
-          mkdir report
-          echo $(rn_repo_name)
-          echo "$(rn_repo_name)/$(image_name)"
-          echo $(image_name)
-          echo $(image_tag)
-          echo "trivy image -s HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt"
-          trivy image -s HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt
+      - task: Bash@3
         displayName: "Image scan by Trivy"
-        continueOnError: true
+        inputs:
+          targetType: 'inline'
+          script: |
+            sudo apt-get install wget apt-transport-https gnupg lsb-release
+            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+            echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+            sudo apt-get -y update
+            sudo apt-get -y install trivy
+            mkdir report
+            echo $(rn_repo_name)
+            echo "$(rn_repo_name)/$(image_name)"
+            echo $(image_name)
+            echo $(image_tag)
+            echo "trivy image -s HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt"
+            trivy image -s HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt
 
       # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
       # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
