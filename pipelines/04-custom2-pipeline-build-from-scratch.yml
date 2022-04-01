@@ -42,33 +42,42 @@ stages:
         inputs:
           script: |
             mkdir report -p
-            trivy --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
-            trivy --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+            trivy i --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy i --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
       - task: Bash@3
         displayName: "Scan container image with Trivy - BASH"
         inputs:
           targetType: 'inline'
           script: |
-           mkdir report -p
-            trivy --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
-            trivy --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+            mkdir report -p
+            trivy i --exit-code 0 --ignore-unfixed image -s MEDIUM, HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy i --exit-code 0 --ignore-unfixed image -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
       - task: CmdLine@2
         displayName: "Scan container image using Containerized Trivy"
         inputs:
           script: |
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag)
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag)
+            mkdir report -p
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
 
 
       # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
       # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
 
       - task: CopyFiles@1
-        displayName: Copy Files to Artifact Staging Directory
+        displayName: Copy Manifests to Artifact Staging Directory
         inputs:
-          SourceFolder: '$(System.DefaultWorkingDirectory)'
+          SourceFolder: '$(System.DefaultWorkingDirectory)/kube-manifests'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          OverWrite: true
+
+      - task: CopyFiles@1
+        displayName: Copy Trivy Reports to Artifact Staging Directory
+        inputs:
+          SourceFolder: '$(System.DefaultWorkingDirectory)/reports'
           Contents: '**'
           TargetFolder: '$(Build.ArtifactStagingDirectory)'
           OverWrite: true
