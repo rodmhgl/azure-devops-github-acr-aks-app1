@@ -2,8 +2,8 @@ trigger:
 - master
 
 variables:
-  image_name: custom2aksnginxapp1
-  acr_name: rnaksdevopsacr.azurecr.io
+  image_name: 'custom2aksnginxapp1'
+  acr_name: 'rnaksdevopsacr.azurecr.io'
   image_tag: $(Build.BuildId)
 
 stages:
