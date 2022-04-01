@@ -71,34 +71,27 @@ stages:
         inputs:
           SourceFolder: '$(System.DefaultWorkingDirectory)/kube-manifests'
           Contents: '**'
-          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/kube-manifests'
           OverWrite: true
 
       - task: CopyFiles@1
         displayName: Copy Trivy Reports to Artifact Staging Directory
         inputs:
-          SourceFolder: '$(System.DefaultWorkingDirectory)/reports'
+          SourceFolder: '$(System.DefaultWorkingDirectory)/report'
           Contents: '**'
-          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/report'
           OverWrite: true
 
       - task: PublishBuildArtifacts@1
         displayName: Publish Kube Manifests
         inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)/kube-manifests'
           ArtifactName: 'kube-manifests'
           publishLocation: 'Container'
 
       - task: PublishBuildArtifacts@1
-        displayName: Publish Medium and High Scan from Trivy
+        displayName: Publish Trivy Scans
         inputs:
-          PathtoPublish: '$(System.DefaultWorkingDirectory)/report/trivy-image-scan-_Medium_High_report.txt'
-          ArtifactName: 'trivy-scan-medium-high'
-          publishLocation: 'Container'
-
-      - task: PublishBuildArtifacts@1
-        displayName: Publish Critical Scan from Trivy
-        inputs:
-          PathtoPublish: '$(System.DefaultWorkingDirectory)/report/trivy-image-scan-report_CRITICAL.txt'
-          ArtifactName: 'trivy-scan-critical'
+          PathtoPublish: '$(System.DefaultWorkingDirectory)/report/'
+          ArtifactName: 'trivy-scans'
           publishLocation: 'Container'
