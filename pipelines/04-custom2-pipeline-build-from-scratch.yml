@@ -31,6 +31,8 @@ stages:
         displayName: "Image scan by Trivy"
         inputs:
           targetType: 'inline'
+          env:
+            REPO_URI: $(rn_repo_name)
           script: |
             sudo apt-get install wget apt-transport-https gnupg lsb-release
             wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
@@ -38,12 +40,12 @@ stages:
             sudo apt-get -y update
             sudo apt-get -y install trivy
             mkdir report
-            echo $(rn_repo_name)
-            echo "$(rn_repo_name)/$(image_name)"
+            echo $REPO_URI
             echo $(image_name)
             echo $(image_tag)
-            echo "trivy image -s HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt"
-            trivy image -s HIGH,CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt
+            echo "$REPO_URI/$(image_name)"
+            echo "trivy image -s HIGH,CRITICAL $REPO_URI/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt"
+            trivy image -s HIGH,CRITICAL $REPO_URI/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt
 
       # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
       # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
