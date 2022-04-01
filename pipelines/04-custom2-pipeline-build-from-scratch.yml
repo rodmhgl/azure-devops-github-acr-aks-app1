@@ -23,6 +23,14 @@ stages:
           tags: |
             $(image_tag)
             $(Build.SourceVersion)
+      - script: |
+          apt-get -y install trivy
+          mkdir report
+          trivy image -s HIGH,CRITICAL $(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
+          trivy image -s HIGH,CRITICAL rnaksdevopsacr.azurecr.io/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
+        displayName: "Image scan by Trivy"
+        continueOnError: true
+
       - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
       - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
       - task: CopyFiles@1
@@ -37,28 +45,6 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
           ArtifactName: 'kube-manifests'
           publishLocation: 'Container'
-
-    - job: TrivyScanContainerImage
-      displayName: Scan container image by Trivy
-      steps:
-      - task: Docker@2
-        displayName: 'Build an image'
-        inputs:
-          command: build
-          repository: $(image_name)
-          tags: $(image_tag)
-          dockerFile: '**/Dockerfile'
-      - script: |
-          mkdir report
-          trivy image -s HIGH,CRITICAL $(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
-        displayName: "Image scan by Trivy"
-        continueOnError: true
-      - task: CopyFiles@1
-        inputs:
-          SourceFolder: '$(System.DefaultWorkingDirectory)'
-          Contents: '**'
-          TargetFolder: '$(Build.ArtifactStagingDirectory)'
-          OverWrite: true
       - task: PublishBuildArtifacts@1
         inputs:
           PathtoPublish: '$(System.DefaultWorkingDirectory)/report/trivy-image-scan-report.txt'
