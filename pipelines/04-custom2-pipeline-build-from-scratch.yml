@@ -4,8 +4,6 @@ trigger:
 variables:
   image_name: custom2aksnginxapp1
   image_tag: $(Build.BuildId)
-  clair_db: arminc/clairdb_latest
-  clair_scan: arminc/clair-local-scan:v2.1.7_5125fde67edee46cb058a3feee7164af9645e07d
 
 stages:
 - stage: Build
@@ -39,9 +37,9 @@ stages:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
           ArtifactName: 'kube-manifests'
           publishLocation: 'Container'
-    - job:
-      displayName: Scan container image by ClairV2
 
+    - job: TrivyScanContainerImage
+      displayName: Scan container image by Trivy
       steps:
       - task: Docker@2
         displayName: 'Build an image'
@@ -52,16 +50,17 @@ stages:
           dockerFile: '**/Dockerfile'
       - script: |
           mkdir report
-          docker run -d --name clair-db $(clair_db)
-          docker run -p 6060:6060 --link clair-db:postgres -d --name clair $(clair_scan)
-          MY_IP=$(ifconfig eth0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
-          sleep 10
-          CLAIR_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' clair)
-          clair-scanner --ip $MY_IP --clair http://$CLAIR_IP:6060 -t High --reportAll=false $(repository):$(tags) | tee ./report/clair-image-scan-report.txt
-          docker stop clair
-          docker rm clair
-          docker stop clair-db
-          docker rm clair-db
-          docker image rm $(clair_db)
-        displayName: "Image scan by Clair"
+          trivy image -s HIGH,CRITICAL $(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
+        displayName: "Image scan by Trivy"
         continueOnError: true
+      - task: CopyFiles@1
+        inputs:
+          SourceFolder: '$(System.DefaultWorkingDirectory)'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          OverWrite: true
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(System.DefaultWorkingDirectory)/report/trivy-image-scan-report.txt'
+          ArtifactName: 'trivy-scan'
+          publishLocation: 'Container'
