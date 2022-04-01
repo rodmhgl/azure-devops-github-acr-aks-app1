@@ -5,6 +5,7 @@ variables:
   image_name: 'custom2aksnginxapp1'
   rn_repo_name: 'rnaksdevopsacr.azurecr.io'
   image_tag: $(Build.BuildId)
+  System.debug: true
 
 stages:
 - stage: Build
