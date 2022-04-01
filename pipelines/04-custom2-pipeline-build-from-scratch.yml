@@ -53,7 +53,8 @@ stages:
         inputs:
           script: |
             mkdir report -p
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            docker run --rm -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
       - task: CopyFiles@1
         displayName: Copy Trivy Reports to Artifact Staging Directory
