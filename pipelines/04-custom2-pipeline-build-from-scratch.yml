@@ -29,10 +29,10 @@ stages:
       - script: |
       - task: Bash@3
         displayName: "Image scan by Trivy"
+        env:
+          REPO_URI: $(rn_repo_name)
         inputs:
           targetType: 'inline'
-          env:
-            REPO_URI: $(rn_repo_name)
           script: |
             sudo apt-get install wget apt-transport-https gnupg lsb-release
             wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
