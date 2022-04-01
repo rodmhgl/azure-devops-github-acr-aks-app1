@@ -31,6 +31,7 @@ stages:
         env:
           REPO_URI: $(rn_repo_name)
         inputs:
+          failOnStderr: true
           targetType: 'inline'
           script: |
             sudo apt-get install wget apt-transport-https gnupg lsb-release
