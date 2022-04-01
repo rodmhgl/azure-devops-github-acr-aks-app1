@@ -24,7 +24,7 @@ stages:
             $(image_tag)
             $(Build.SourceVersion)
       - script: |
-          apt-get -y install trivy
+          sudo apt-get -y install trivy
           mkdir report
           trivy image -s HIGH,CRITICAL $(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
           trivy image -s HIGH,CRITICAL rnaksdevopsacr.azurecr.io/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
