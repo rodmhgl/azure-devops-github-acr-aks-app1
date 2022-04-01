@@ -58,9 +58,8 @@ stages:
         displayName: "Scan container image using Containerized Trivy"
         inputs:
           script: |
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed image --severity MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag)
-
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed image --severity CRITICAL $(rn_repo_name)/$(image_name):$(image_tag)
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag)
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --exit-code 0 --ignore-unfixed -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag)
 
 
       # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
