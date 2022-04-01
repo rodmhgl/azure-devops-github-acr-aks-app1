@@ -2,7 +2,8 @@ trigger:
 - master
 
 variables:
-  image_name: custom2aksnginxapp1
+  image_name: 'custom2aksnginxapp1'
+  rn_repo_name: 'rnaksdevopsacr.azurecr.io'
   image_tag: $(Build.BuildId)
 
 stages:
@@ -15,6 +16,7 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
       - task: Docker@2
+        displayName: "Building Container"
         inputs:
           containerRegistry: 'manual-rnaksdevopsacr-svc'
           repository: '$(image_name)'
@@ -23,34 +25,73 @@ stages:
           tags: |
             $(image_tag)
             $(Build.SourceVersion)
-      - script: |
-          sudo apt-get install wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get -y update
-          sudo apt-get -y install trivy
-          mkdir report
-          trivy image -s HIGH,CRITICAL $(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
-          trivy image -s HIGH,CRITICAL rnaksdevopsacr.azurecr.io/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report.txt
-        displayName: "Image scan by Trivy"
-        continueOnError: true
+      
+      - task: Bash@3
+        displayName: "Install Trivy"
+        inputs:
+          targetType: 'inline'
+          script: |
+            sudo apt-get install wget apt-transport-https gnupg lsb-release
+            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add - || true
+            echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+            sudo apt-get -y update
+            sudo apt-get -y install trivy
 
-      - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
-      - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
+      - task: CmdLine@2
+        displayName: "Scan container image with Trivy - CmdLine"
+        inputs:
+          script: |
+            mkdir report -p
+            trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy i --ignore-unfixed --no-progress -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+
+      - task: Bash@3
+        displayName: "Scan container image with Trivy - BASH"
+        inputs:
+          targetType: 'inline'
+          script: |
+            mkdir report -p
+            trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            trivy i --ignore-unfixed --no-progress -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+
+      - task: CmdLine@2
+        displayName: "Scan container image using Containerized Trivy"
+        inputs:
+          script: |
+            mkdir report -p
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s MEDIUM,HIGH $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-_Medium_High_report.txt
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/Library/Caches:/root/.cache/ aquasec/trivy i --ignore-unfixed --no-progress -s CRITICAL $(rn_repo_name)/$(image_name):$(image_tag) | tee ./report/trivy-image-scan-report_CRITICAL.txt
+
+
+      # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
+      # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
+
       - task: CopyFiles@1
+        displayName: Copy Manifests to Artifact Staging Directory
         inputs:
-          SourceFolder: '$(System.DefaultWorkingDirectory)'
+          SourceFolder: '$(System.DefaultWorkingDirectory)/kube-manifests'
           Contents: '**'
-          TargetFolder: '$(Build.ArtifactStagingDirectory)'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/kube-manifests'
           OverWrite: true
-      - bash: echo After copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
-      - task: PublishBuildArtifacts@1
+
+      - task: CopyFiles@1
+        displayName: Copy Trivy Reports to Artifact Staging Directory
         inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          SourceFolder: '$(System.DefaultWorkingDirectory)/report'
+          Contents: '**'
+          TargetFolder: '$(Build.ArtifactStagingDirectory)/report'
+          OverWrite: true
+
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Kube Manifests
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)/kube-manifests'
           ArtifactName: 'kube-manifests'
           publishLocation: 'Container'
+
       - task: PublishBuildArtifacts@1
+        displayName: Publish Trivy Scans
         inputs:
-          PathtoPublish: '$(System.DefaultWorkingDirectory)/report/trivy-image-scan-report.txt'
-          ArtifactName: 'trivy-scan'
+          PathtoPublish: '$(System.DefaultWorkingDirectory)/report/'
+          ArtifactName: 'trivy-scans'
           publishLocation: 'Container'
