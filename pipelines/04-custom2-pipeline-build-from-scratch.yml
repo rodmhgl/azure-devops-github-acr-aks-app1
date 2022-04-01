@@ -3,7 +3,7 @@ trigger:
 
 variables:
   image_name: custom2aksnginxapp1
-  repository: rnaksdevopsacr.azurecr.io
+  acr_name: rnaksdevopsacr.azurecr.io
   image_tag: $(Build.BuildId)
 
 stages:
@@ -16,6 +16,7 @@ stages:
         vmImage: 'ubuntu-latest'
       steps:
       - task: Docker@2
+        displayName: "Building Container"
         inputs:
           containerRegistry: 'manual-rnaksdevopsacr-svc'
           repository: '$(image_name)'
@@ -24,6 +25,7 @@ stages:
           tags: |
             $(image_tag)
             $(Build.SourceVersion)
+      
       - script: |
           sudo apt-get install wget apt-transport-https gnupg lsb-release
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
@@ -31,20 +33,20 @@ stages:
           sudo apt-get -y update
           sudo apt-get -y install trivy
           mkdir report
-          echo "trivy image -s HIGH,CRITICAL $(repository)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt"
-          trivy image -s HIGH,CRITICAL $(repository)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt
+          echo "trivy image -s HIGH,CRITICAL $(acr_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt"
+          trivy image -s HIGH,CRITICAL $(acr_name)/$(image_name):$(image_tag) --exit-code | tee ./report/trivy-image-scan-report.txt
         displayName: "Image scan by Trivy"
         continueOnError: true
 
-      - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
-      - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
+      # - bash: echo Contents in System Default Working Directory; ls -R $(System.DefaultWorkingDirectory)
+      # - bash: echo Before copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
       - task: CopyFiles@1
         inputs:
           SourceFolder: '$(System.DefaultWorkingDirectory)'
           Contents: '**'
           TargetFolder: '$(Build.ArtifactStagingDirectory)'
           OverWrite: true
-      - bash: echo After copying Contents in Build Artifact Directory; ls -R $(Build.ArtifactStagingDirectory)
+
       - task: PublishBuildArtifacts@1
         inputs:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
