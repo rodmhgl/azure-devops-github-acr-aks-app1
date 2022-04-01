@@ -39,6 +39,7 @@ stages:
           ArtifactName: 'kube-manifests'
           publishLocation: 'Container'
     - job: Scan
+      dependsOn: Build
       displayName: Scan Container for Vulnerabilities
       pool:
         vmImage: 'ubuntu-latest'
